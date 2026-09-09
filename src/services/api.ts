@@ -70,14 +70,20 @@ let storedAppointments: Appointment[] = [
   { id: 2, appointment_code: 'APT-2026-8802', patient_name: 'Sarah Jenkins', patient_phone: '+1 555-0184', patient_email: 'sarah@example.com', doctor_name: 'Dr. Amara Patel', doctor_specialization: 'Dermatology', department_name: 'Dermatology', appointment_date: '2026-09-10', appointment_time: '02:30 PM', reason: 'Skin allergy screening', status: 'Pending', consultation_fee: 120, created_at: '2026-09-09' }
 ];
 
+const isStaticDeployment = typeof window !== 'undefined' && 
+  !window.location.hostname.includes('localhost') && 
+  !window.location.hostname.includes('127.0.0.1');
+
 async function fetchWithFallback<T>(url: string, fallbackData: T): Promise<T> {
+  if (isStaticDeployment) {
+    return Promise.resolve(JSON.parse(JSON.stringify(fallbackData)));
+  }
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
-    // Return fallback mock data for static GitHub Pages hosting
-    return fallbackData;
+    return JSON.parse(JSON.stringify(fallbackData));
   }
 }
 
