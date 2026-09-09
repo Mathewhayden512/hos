@@ -1,0 +1,15 @@
+# Node & Build Outputs
+node_modules/
+.node_bin/
+dist/
+dist-server/
+data/
+
+# Environment Variables & Secrets
+.env
+.env.local
+
+# Logs & OS Files
+*.log
+npm-debug.log*
+.DS_Store
