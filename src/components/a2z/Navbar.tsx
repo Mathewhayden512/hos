@@ -38,6 +38,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
     { name: 'Contact', href: '#contact' },
   ];
 
+  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const id = href.replace(/^#/, '');
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      window.history.replaceState(null, '', href);
+    }
+  };
+
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -50,7 +60,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
         <div className="flex items-center justify-between">
           
           {/* Logo & Brand */}
-          <a href="#hero" className="flex items-center gap-3 group">
+          <a 
+            href="#hero" 
+            onClick={(e) => handleScrollTo(e, '#hero')}
+            className="flex items-center gap-3 group"
+          >
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-forest-500 via-forest-600 to-forest-800 p-0.5 shadow-lg shadow-forest-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-[#06130c] rounded-[10px] flex items-center justify-center text-forest-300">
                 <Compass className="w-6 h-6 animate-[spin_20s_linear_infinite]" />
@@ -77,6 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
               <a
                 key={link.name}
                 href={link.href}
+                onClick={(e) => handleScrollTo(e, link.href)}
                 className="px-3 py-1.5 rounded-lg text-sm font-medium text-mist-200 hover:text-white hover:bg-white/10 transition-all duration-200"
               >
                 {link.name}
@@ -145,7 +160,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
               <a
                 key={link.name}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleScrollTo(e, link.href);
+                }}
                 className="px-4 py-2.5 rounded-lg text-sm font-medium text-mist-100 hover:bg-white/10 transition-colors"
               >
                 {link.name}
