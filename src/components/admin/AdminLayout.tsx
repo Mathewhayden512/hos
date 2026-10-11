@@ -1,176 +1,185 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  UserCheck, 
-  Building2, 
-  CalendarCheck, 
-  Users, 
-  ShieldAlert, 
-  Settings, 
-  LogOut, 
-  HeartHandshake,
-  Menu,
-  X
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { BrandLogo } from '../common/BrandLogo';
+import {
+  LayoutDashboard,
+  Package,
+  FolderTree,
+  ShoppingBag,
+  Users,
+  MessageSquare,
+  Boxes,
+  Star,
+  Tag,
+  Quote,
+  FileText,
+  Settings,
+  LogOut,
+  Shield,
+  Menu,
+  X,
+  ExternalLink,
+  Lock
+} from 'lucide-react';
 
-interface Props {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export const AdminLayout: React.FC<Props> = ({ activeTab, setActiveTab, children }) => {
-  const { user, logout } = useAuth();
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+  const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
+  // If user is not logged in as ADMIN, display access denied / login prompt
+  if (!user || user.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-[#FAF7EF] flex items-center justify-center p-4">
+        <div className="bg-[#FFFDF9] max-w-md w-full rounded-3xl p-8 border border-[#D8CBB9] shadow-stitch text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-[#FAF0F2] text-[#C97882] flex items-center justify-center mx-auto">
+            <Lock className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="font-serif text-3xl font-bold text-[#3B2418]">Admin Access Required</h1>
+            <p className="text-xs text-[#879477] max-w-xs mx-auto">
+              This area is restricted to studio administrators. Normal customers cannot access admin functionality.
+            </p>
+          </div>
 
-  const navItems = [
-    { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
-    { id: 'appointments', label: 'Appointment Master', icon: CalendarCheck },
-    { id: 'doctors', label: 'Doctor Management', icon: UserCheck },
-    { id: 'departments', label: 'Department Manager', icon: Building2 },
-    { id: 'patients', label: 'Patient Directory', icon: Users },
-    { id: 'facilities', label: 'Facility Manager', icon: ShieldAlert },
-    { id: 'settings', label: 'Hospital Settings', icon: Settings },
+          <div className="pt-2 space-y-3">
+            <Link
+              to="/account"
+              className="w-full py-3.5 bg-[#C97882] hover:bg-[#b0616b] text-white font-semibold text-xs rounded-xl shadow-rose-glow flex items-center justify-center gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Login to Admin Account</span>
+            </Link>
+            <Link to="/" className="inline-block text-xs text-[#879477] underline">
+              Return to Customer Website
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const sidebarItems = [
+    { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+    { name: 'Products', path: '/admin/products', icon: Package },
+    { name: 'Categories', path: '/admin/categories', icon: FolderTree },
+    { name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
+    { name: 'Customers', path: '/admin/customers', icon: Users },
+    { name: 'Custom Requests', path: '/admin/custom-requests', icon: MessageSquare },
+    { name: 'Inventory', path: '/admin/inventory', icon: Boxes },
+    { name: 'Reviews', path: '/admin/reviews', icon: Star },
+    { name: 'Coupons', path: '/admin/coupons', icon: Tag },
+    { name: 'Testimonials', path: '/admin/testimonials', icon: Quote },
+    { name: 'Website Content', path: '/admin/cms', icon: FileText },
+    { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex">
+    <div className="min-h-screen bg-[#FAF7EF] flex text-[#3B2418]">
       
-      {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex flex-col w-64 bg-slate-950 border-r border-slate-800 p-6 justify-between shrink-0">
-        <div className="space-y-8">
-          {/* Header */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-hospital-500 to-teal-400 flex items-center justify-center text-white font-bold shadow-md">
-              <HeartHandshake className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-base font-bold text-white block leading-tight">St. Jude Hospital</span>
-              <span className="text-[10px] text-hospital-400 font-semibold tracking-wider block uppercase">ADMIN PORTAL</span>
-            </div>
-          </Link>
-
-          {/* Nav List */}
-          <nav className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${
-                    active
-                      ? 'bg-hospital-600 text-white font-semibold shadow-lg shadow-hospital-600/20'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+      {/* Sidebar Navigation (Desktop) */}
+      <aside className="hidden lg:flex flex-col w-64 bg-[#FFFDF9] border-r border-[#D8CBB9] p-6 space-y-8 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
+        <div className="pt-2">
+          <BrandLogo size="sm" />
+          <div className="mt-2 px-2 py-1 bg-[#FAF0F2] rounded-lg text-[10px] font-bold text-[#C97882] uppercase tracking-wider inline-flex items-center gap-1 border border-[#E8B5B8]">
+            <Shield className="w-3 h-3" />
+            <span>Studio Admin Suite</span>
+          </div>
         </div>
 
-        {/* Footer Admin info */}
-        <div className="pt-6 border-t border-slate-800 space-y-4">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-full bg-hospital-600/30 text-hospital-400 border border-hospital-500/30 flex items-center justify-center font-bold text-sm">
-              A
-            </div>
-            <div className="overflow-hidden">
-              <span className="text-xs font-bold text-white block truncate">{user?.email || 'admin@wisehospital.com'}</span>
-              <span className="text-[10px] text-emerald-400 block font-semibold">Super Admin Role</span>
-            </div>
-          </div>
+        <nav className="flex-1 space-y-1">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  isActive
+                    ? 'bg-[#3B2418] text-[#FAF7EF] shadow-sm'
+                    : 'text-[#3B2418]/80 hover:bg-[#EFE6D8] hover:text-[#3B2418]'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-[#C97882]' : 'text-[#879477]'}`} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
+        <div className="pt-4 border-t border-[#D8CBB9]/60 space-y-2">
+          <Link
+            to="/"
+            target="_blank"
+            className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#879477] hover:text-[#3B2418]"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span>View Live Website</span>
+          </Link>
           <button
-            onClick={handleLogout}
-            className="w-full py-2.5 px-4 rounded-xl border border-slate-800 text-rose-400 hover:bg-rose-950/40 hover:border-rose-900 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+            onClick={() => { logout(); navigate('/'); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#C97882] hover:bg-[#FAF0F2] rounded-xl"
           >
             <LogOut className="w-4 h-4" />
-            <span>Log Out Admin</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Admin Content Container */}
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Header */}
-        <header className="bg-slate-950 border-b border-slate-800 px-6 py-4 flex items-center justify-between lg:justify-end">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-
+        <header className="bg-[#FFFDF9] border-b border-[#D8CBB9] px-6 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 text-[#3B2418]"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <div>
+              <h2 className="font-serif font-bold text-xl text-[#3B2418]">A Millennial’s Stitch Admin</h2>
+              <p className="text-[10px] text-[#879477]">Logged in as <strong>{user.full_name}</strong></p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
             <Link
               to="/"
-              className="text-xs font-semibold text-hospital-400 hover:text-hospital-300 underline"
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-[#FAF7EF] border border-[#D8CBB9] text-[#3B2418] text-xs font-semibold rounded-xl hover:bg-[#EFE6D8]"
             >
-              ← View Public Hospital Website
+              <ExternalLink className="w-3.5 h-3.5 text-[#879477]" />
+              <span>Customer View</span>
             </Link>
           </div>
         </header>
 
         {/* Mobile Drawer */}
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm flex">
-            <div className="w-4/5 max-w-xs bg-slate-950 h-full p-6 flex flex-col justify-between overflow-y-auto">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <HeartHandshake className="w-6 h-6 text-hospital-400" />
-                    <span className="font-bold text-white">St. Jude Admin</span>
-                  </div>
-                  <button onClick={() => setSidebarOpen(false)} className="p-1 text-slate-400">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <nav className="space-y-1">
-                  {navItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id);
-                          setSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm ${
-                          activeTab === item.id ? 'bg-hospital-600 text-white' : 'text-slate-400'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span>{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              <button onClick={handleLogout} className="py-2.5 bg-rose-950/50 text-rose-400 rounded-xl text-xs font-bold">
-                Logout
-              </button>
-            </div>
+        {isSidebarOpen && (
+          <div className="lg:hidden bg-[#FFFDF9] border-b border-[#D8CBB9] p-6 space-y-2 z-40">
+            {sidebarItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                onClick={() => setIsSidebarOpen(false)}
+                className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#3B2418]"
+              >
+                <span>{item.name}</span>
+              </Link>
+            ))}
           </div>
         )}
 
-        {/* Dynamic Page Content Body */}
-        <main className="p-6 sm:p-8 flex-1 overflow-y-auto">
+        {/* Content Body */}
+        <main className="p-6 sm:p-10 flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

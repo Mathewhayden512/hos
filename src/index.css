@@ -6,49 +6,91 @@
   html {
     scroll-behavior: smooth;
   }
-}
 
-@keyframes spinSlow {
-  from {
-    transform: rotate(0deg);
+  body {
+    background-color: #06130c;
+    color: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
-@keyframes bounceSlow {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
+  h1, h2, h3, h4, .font-serif-heading {
+    font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
   }
 }
 
-.animate-spin-slow {
-  animation: spinSlow 12s linear infinite;
-}
-
-.animate-bounce-slow {
-  animation: bounceSlow 4s ease-in-out infinite;
-}
-
-/* Custom Scrollbar for Healthcare UI */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #06130c;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: #1b4d35;
+  border-radius: 9999px;
+  border: 2px solid #06130c;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #52b788;
+}
+
+/* Custom Selection */
+::selection {
+  background: #2d6a4f;
+  color: #ffffff;
+}
+
+/* Glassmorphism Nature Card */
+.glass-nature {
+  background: rgba(10, 32, 21, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(82, 183, 136, 0.2);
+}
+
+.glass-mist {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-card-hover {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(82, 183, 136, 0.45);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), 0 0 24px -4px rgba(82, 183, 136, 0.25);
+}
+
+/* Airplane travel trail animation */
+@keyframes flightDash {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.flight-dash-anim {
+  animation: flightDash 2s linear infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.3;
+  }
+}
+
+.pulse-glow-anim {
+  animation: pulseGlow 2.5s ease-in-out infinite;
 }

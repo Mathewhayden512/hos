@@ -1,203 +1,183 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, ShieldAlert, Navigation } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
+import { useShop } from '../context/ShopContext';
+import { LeafDivider } from '../components/common/BotanicalAccents';
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, Instagram } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
-  const { showToast } = useToast();
-  const [formData, setFormData] = useState({
+  const { settings, showToast } = useShop();
+
+  const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
-    subject: '',
-    message: ''
+    message: '',
   });
-  const [sending, setSending] = useState(false);
+
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      showToast('Please fill in all required contact fields.', 'error');
-      return;
-    }
-
-    setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      setSubmitted(true);
-      showToast('Your message has been sent to our patient care team!', 'success');
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-    }, 1000);
+    if (!form.name || !form.email || !form.message) return;
+    setSubmitted(true);
+    showToast('Your message has been sent to our studio! 🌸', 'success');
   };
 
   return (
-    <div className="space-y-16 pb-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
       
-      {/* Banner */}
-      <section className="bg-gradient-to-r from-hospital-950 via-hospital-900 to-slate-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-          <span className="text-xs font-bold text-hospital-400 uppercase tracking-widest block">GET IN TOUCH</span>
-          <h1 className="text-4xl font-extrabold tracking-tight">Contact St. Jude Memorial Hospital</h1>
-          <p className="text-slate-300 text-base max-w-2xl">
-            We are here to answer your questions, assist with appointments, and provide immediate medical emergency guidance.
-          </p>
-        </div>
-      </section>
+      {/* Header */}
+      <div className="text-center space-y-3">
+        <span className="text-xs font-bold uppercase tracking-widest text-[#C97882]">Get in Touch</span>
+        <h1 className="font-serif text-4xl sm:text-5xl font-bold text-[#3B2418]">We’d Love to Hear From You</h1>
+        <p className="text-sm text-[#3B2418]/80 max-w-lg mx-auto">
+          Have a question about a product, custom order inquiry, or shipping update? Send us a message!
+        </p>
+        <LeafDivider />
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
-          {/* Left Column: Info Cards */}
-          <div className="lg:col-span-5 space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Hospital Contact Hub</h2>
-              <p className="text-sm text-slate-600 mt-1">Available around the clock for patient inquiries.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        {/* Contact Info (5 cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-[#FFFDF9] rounded-3xl p-8 border border-[#D8CBB9] shadow-stitch space-y-6">
+            <h2 className="font-serif font-bold text-2xl text-[#3B2418]">Artisan Studio Info</h2>
+
+            <div className="space-y-4 text-xs text-[#3B2418]">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-[#FAF0F2] text-[#C97882] flex-shrink-0">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-[#3B2418] block">Email Support</span>
+                  <a href={`mailto:${settings.contact_email}`} className="text-[#879477] hover:underline">
+                    {settings.contact_email || 'hello@amillennialstitch.com'}
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-[#FAF0F2] text-[#C97882] flex-shrink-0">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-[#3B2418] block">Phone / WhatsApp</span>
+                  <span className="text-[#879477]">{settings.contact_phone || '(555) 234-5678'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-[#FAF0F2] text-[#C97882] flex-shrink-0">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-[#3B2418] block">Studio Location</span>
+                  <span className="text-[#879477]">{settings.business_address || 'Nashville, Tennessee, USA'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-[#FAF0F2] text-[#C97882] flex-shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-[#3B2418] block">Business Hours</span>
+                  <span className="text-[#879477]">Monday – Friday: 9am – 5pm CST</span>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-hospital-50 text-hospital-600 flex items-center justify-center shrink-0 mt-1">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-base">Hospital Address</h4>
-                  <p className="text-xs text-slate-600 mt-0.5">742 Evergreen Terrace, Medical District, NY 10021</p>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-1">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-base">Helpline & OPD</h4>
-                  <p className="text-xs text-slate-600 mt-0.5">Main Desk: +1 (800) 555-4321</p>
-                  <p className="text-xs text-rose-600 font-bold mt-1">Emergency Hotline: +1 (800) 911-CARE (24/7)</p>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 mt-1">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-base">Email Contact</h4>
-                  <p className="text-xs text-slate-600 mt-0.5">contact@stjudememorial.org</p>
-                  <p className="text-xs text-slate-600">appointments@stjudememorial.org</p>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-1">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-base">Opening Hours</h4>
-                  <p className="text-xs text-slate-600 mt-0.5">OPD & Clinics: Mon - Sat (8:00 AM - 8:00 PM)</p>
-                  <p className="text-xs font-semibold text-emerald-600 mt-0.5">Emergency & Trauma ICU: 24/7 Always Open</p>
-                </div>
-              </div>
+            <div className="pt-4 border-t border-[#D8CBB9]/60 flex items-center gap-3">
+              <span className="text-xs font-semibold text-[#879477]">Follow our journey:</span>
+              <a href={settings.instagram_url} target="_blank" rel="noreferrer" className="p-2 bg-[#FAF7EF] rounded-full text-[#C97882] hover:bg-[#FAF0F2]">
+                <Instagram className="w-4 h-4" />
+              </a>
             </div>
           </div>
+        </div>
 
-          {/* Right Column: Contact Form */}
-          <div className="lg:col-span-7">
-            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold text-slate-900">Send Us a Direct Message</h3>
-                <p className="text-xs text-slate-500 mt-1">Fill out the form below and our medical team will respond within 2 hours.</p>
-              </div>
-
-              {submitted ? (
-                <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-3">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                  <h4 className="font-bold text-emerald-900 text-lg">Thank You for Reaching Out!</h4>
-                  <p className="text-xs text-emerald-700">
-                    We have received your message and sent a copy to your email address.
-                  </p>
-                  <button
-                    onClick={() => setSubmitted(false)}
-                    className="mt-2 px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs"
-                  >
-                    Send Another Message
-                  </button>
+        {/* Contact Form (7 cols) */}
+        <div className="lg:col-span-7">
+          <div className="bg-[#FFFDF9] rounded-3xl p-8 sm:p-10 border border-[#D8CBB9] shadow-stitch">
+            {submitted ? (
+              <div className="text-center py-10 space-y-4">
+                <div className="w-14 h-14 bg-[#FAF0F2] text-[#C97882] rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-8 h-8" />
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="block font-bold text-slate-700">Your Full Name *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Eleanor Vance"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-hospital-500 text-sm"
-                      />
-                    </div>
+                <h2 className="font-serif text-2xl font-bold text-[#3B2418]">Message Sent!</h2>
+                <p className="text-xs text-[#879477] max-w-sm mx-auto">
+                  Thank you for reaching out. Our team will get back to you within 24 hours.
+                </p>
+                <button
+                  onClick={() => setSubmitted(false)}
+                  className="px-6 py-2 bg-[#C97882] text-white text-xs font-semibold rounded-xl"
+                >
+                  Send Another Message
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <h2 className="font-serif font-bold text-2xl text-[#3B2418] mb-4">Send Us a Message</h2>
 
-                    <div className="space-y-1">
-                      <label className="block font-bold text-slate-700">Email Address *</label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="eleanor@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-hospital-500 text-sm"
-                      />
-                    </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#3B2418]">Your Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Sarah Jenkins"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full mt-1 p-3 bg-[#FAF7EF] border border-[#D8CBB9] rounded-xl text-xs focus:outline-none focus:border-[#C97882]"
+                  />
+                </div>
 
-                    <div className="space-y-1">
-                      <label className="block font-bold text-slate-700">Phone Number</label>
-                      <input
-                        type="tel"
-                        placeholder="+1 555-0192"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-hospital-500 text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block font-bold text-slate-700">Subject / Department</label>
-                      <input
-                        type="text"
-                        placeholder="Inquiry about Cardiology OPD"
-                        value={formData.subject}
-                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-hospital-500 text-sm"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2 space-y-1">
-                      <label className="block font-bold text-slate-700">Your Message *</label>
-                      <textarea
-                        rows={4}
-                        required
-                        placeholder="How can we assist you today?"
-                        value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-hospital-500 text-sm"
-                      />
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-[#3B2418]">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="sarah@example.com"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="w-full mt-1 p-3 bg-[#FAF7EF] border border-[#D8CBB9] rounded-xl text-xs focus:outline-none focus:border-[#C97882]"
+                    />
                   </div>
+                  <div>
+                    <label className="text-xs font-semibold text-[#3B2418]">Phone Number</label>
+                    <input
+                      type="tel"
+                      placeholder="(555) 987-6543"
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      className="w-full mt-1 p-3 bg-[#FAF7EF] border border-[#D8CBB9] rounded-xl text-xs focus:outline-none focus:border-[#C97882]"
+                    />
+                  </div>
+                </div>
 
-                  <button
-                    type="submit"
-                    disabled={sending}
-                    className="w-full py-4 rounded-xl bg-hospital-600 hover:bg-hospital-700 text-white font-bold text-sm shadow-lg shadow-hospital-600/30 flex items-center justify-center gap-2 transition-all"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>{sending ? 'Transmitting Message...' : 'Send Message'}</span>
-                  </button>
-                </form>
-              )}
-            </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#3B2418]">Message *</label>
+                  <textarea
+                    required
+                    rows={4}
+                    placeholder="How can we help you today?"
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    className="w-full mt-1 p-3 bg-[#FAF7EF] border border-[#D8CBB9] rounded-xl text-xs focus:outline-none focus:border-[#C97882]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 bg-[#C97882] hover:bg-[#b0616b] text-white font-semibold text-xs rounded-xl shadow-rose-glow flex items-center justify-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Send Message</span>
+                </button>
+              </form>
+            )}
           </div>
-
         </div>
+
       </div>
 
     </div>

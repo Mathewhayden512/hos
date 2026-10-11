@@ -1,174 +1,510 @@
 import bcrypt from 'bcryptjs';
-import { initDatabase, queryOne, runExecute } from './database.js';
+import { queryOne, runExecute } from './database.js';
 
 export async function seedDatabaseIfNeeded() {
-  await initDatabase();
-
-  // Check if hospital_information exists
-  const infoCount = await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM hospital_information');
-  if (infoCount && Number(infoCount.count) > 0) {
+  const adminUser = await queryOne('SELECT id FROM users WHERE email = ?', ['admin@amillennialstitch.com']);
+  if (adminUser) {
     console.log('🌱 Database already seeded.');
     return;
   }
 
-  console.log('🌱 Seeding initial demo data...');
+  console.log('🌱 Seeding A Millennial\'s Stitch database with rich initial craft data...');
 
-  // Hospital Info
-  await runExecute(`
-    INSERT INTO hospital_information (name, tagline, description, address, phone, email, emergency_phone, working_hours, mission, vision, social_links)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    'St. Jude Memorial Hospital & Research Institute',
-    'Compassionate Care. Advanced Medicine. Better Health.',
-    'St. Jude Memorial Hospital is a premier multi-specialty tertiary care hospital committed to providing world-class patient care, innovative research, and medical excellence for over 25 years.',
-    '742 Evergreen Terrace, Medical District, NY 10021',
-    '+1 (800) 555-4321',
-    'contact@stjudememorial.org',
-    '+1 (800) 911-CARE',
-    '24 Hours / 7 Days a Week',
-    'To deliver empathetic, patient-first medical care utilizing state-of-the-art diagnostic technology and evidence-based treatments to improve health outcomes across our community.',
-    'To be recognized globally as an elite healthcare institute pioneering clinical research, surgical innovation, and compassionate patient rehabilitation.',
-    JSON.stringify({ facebook: 'https://facebook.com', twitter: 'https://twitter.com', linkedin: 'https://linkedin.com', instagram: 'https://instagram.com' })
-  ]);
+  // 1. Seed Users
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  const customerPassword = await bcrypt.hash('customer123', 10);
 
-  // Admin User: admin@wisehospital.com / AdminPass123!
-  const passwordHash = await bcrypt.hash('AdminPass123!', 10);
-  await runExecute(`
-    INSERT INTO users (email, password_hash, role)
-    VALUES (?, ?, ?)
-  `, ['admin@wisehospital.com', passwordHash, 'admin']);
+  await runExecute(
+    `INSERT INTO users (email, password_hash, full_name, phone, address, role) VALUES (?, ?, ?, ?, ?, ?)`,
+    ['admin@amillennialstitch.com', adminPassword, 'Hannah Grace (Founder)', '(555) 234-5678', '124 Faith Way, Nashville, TN', 'ADMIN']
+  );
 
-  // Departments (12)
-  const departmentsData = [
-    { id: 1, name: 'Cardiology', slug: 'cardiology', icon: 'Heart', desc: 'Comprehensive cardiovascular care including interventional cardiology, electrophysiology, and preventive heart wellness.', services: ['ECG & Echocardiography', 'Coronary Angiography', 'Angioplasty & Stenting', 'Heart Valve Surgery', 'Cardiac Rehabilitation'], img: 'https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?auto=format&fit=crop&q=80&w=800' },
-    { id: 2, name: 'Neurology', slug: 'neurology', icon: 'Brain', desc: 'Advanced diagnosis and neuro-surgical treatment for stroke, epilepsy, Parkinson’s disease, and spine disorders.', services: ['EEG & EMG Testing', 'Stroke Intervention Unit', 'Epilepsy Management', 'Neurosurgery', 'Spine Surgery'], img: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&q=80&w=800' },
-    { id: 3, name: 'Orthopedics', slug: 'orthopedics', icon: 'Bone', desc: 'Specialized care for joint replacements, complex fractures, sports injuries, and minimally invasive knee surgery.', services: ['Total Knee & Hip Replacement', 'Arthroscopic Surgery', 'Fracture & Trauma Care', 'Sports Injury Clinic', 'Physiotherapy'], img: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800' },
-    { id: 4, name: 'Pediatrics', slug: 'pediatrics', icon: 'Baby', desc: 'Dedicated medical care for infants, children, and adolescents featuring specialized NICU and PICU units.', services: ['Well-child Checkups', 'Pediatric ICU (PICU)', 'Neonatal ICU (NICU)', 'Immunization & Vaccination', 'Child Psychology'], img: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=800' },
-    { id: 5, name: 'Dermatology', slug: 'dermatology', icon: 'Sparkles', desc: 'Comprehensive medical, surgical, and cosmetic skin care for eczema, psoriasis, skin cancer screening, and laser therapy.', services: ['Acne & Psoriasis Clinic', 'Skin Cancer Screening', 'Cosmetic Dermatology', 'Laser Hair Removal', 'Mohs Surgery'], img: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&q=80&w=800' },
-    { id: 6, name: 'General Medicine', slug: 'general-medicine', icon: 'Stethoscope', desc: 'Primary healthcare services for acute and chronic adult illnesses, diabetes management, and preventive wellness.', services: ['Comprehensive Health Checkups', 'Diabetes & Hypertension Care', 'Infectious Disease Control', 'Preventive Care', 'Geriatric Medicine'], img: 'https://images.unsplash.com/photo-1666214280557-f1b5022eb634?auto=format&fit=crop&q=80&w=800' },
-    { id: 7, name: 'Gynecology & Obstetrics', slug: 'gynecology', icon: 'UserCheck', desc: 'Holistic healthcare for women including prenatal care, high-risk pregnancy delivery, and laparoscopic surgery.', services: ['Antenatal & Postnatal Care', 'High-Risk Pregnancy Delivery', 'Laparoscopic Surgery', 'Infertility Evaluation', 'Menopause Care'], img: 'https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&q=80&w=800' },
-    { id: 8, name: 'ENT (Otolaryngology)', slug: 'ent', icon: 'Ear', desc: 'Expert care for ear, nose, throat, hearing loss, sinus disorders, and endoscopic sinus surgeries.', services: ['Endoscopic Sinus Surgery', 'Hearing Assessment & Implants', 'Voice & Swallowing Therapy', 'Tonsillectomy', 'Sleep Apnea Management'], img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800' },
-    { id: 9, name: 'Gastroenterology', slug: 'gastroenterology', icon: 'Activity', desc: 'Specialized care for digestive system diseases, liver disorders, endoscopy, colonoscopy, and IBS.', services: ['Diagnostic Endoscopy', 'Colonoscopy Screening', 'Liver & Hepatitis Clinic', 'GERD & IBS Management', 'ERCP Procedures'], img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=800' },
-    { id: 10, name: 'Oncology', slug: 'oncology', icon: 'ShieldAlert', desc: 'Integrated cancer care offering chemotherapy, targeted immunotherapy, surgical oncology, and radiation planning.', services: ['Chemotherapy Center', 'Surgical Oncology', 'Immunotherapy & Targeted Care', 'Radiation Therapy Planning', 'Palliative Care'], img: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800' },
-    { id: 11, name: 'Urology', slug: 'urology', icon: 'Activity', desc: 'Medical and surgical treatments for kidney stones, prostate disorders, urinary incontinence, and urological cancers.', services: ['Laser Kidney Stone Treatment', 'Prostate Care & TURP', 'Urological Cancer Surgery', 'Incontinence Care', 'Male Infertility'], img: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800' },
-    { id: 12, name: 'Pulmonology', slug: 'pulmonology', icon: 'Wind', desc: 'Advanced pulmonary diagnosis and treatment for asthma, COPD, sleep disorders, and respiratory infections.', services: ['Pulmonary Function Testing', 'Bronchoscopy', 'Sleep Apnea Diagnostics', 'Asthma & Allergy Clinic', 'COPD Rehabilitation'], img: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&q=80&w=800' }
+  await runExecute(
+    `INSERT INTO users (email, password_hash, full_name, phone, address, role) VALUES (?, ?, ?, ?, ?, ?)`,
+    ['customer@example.com', customerPassword, 'Sarah Jenkins', '(555) 987-6543', '742 Evergreen Terrace, Springfield, OR', 'CUSTOMER']
+  );
+
+  // 2. Seed Categories
+  const categories = [
+    {
+      name: 'Crochet Accessories',
+      slug: 'crochet-accessories',
+      description: 'Elegant handmade scarves, beanies, fingerless gloves, and hair scrunchies.',
+      image_url: '/images/hero_showcase.jpg',
+      item_count: 8
+    },
+    {
+      name: 'Baby & Kids',
+      slug: 'baby-kids',
+      description: 'Ultra-soft hand-knitted cardigans, plush loveys, booties, and nursery keepsakes.',
+      image_url: '/images/baby_cardigan.jpg',
+      item_count: 6
+    },
+    {
+      name: 'Handmade Gifts',
+      slug: 'handmade-gifts',
+      description: 'Thoughtful everlasting crochet flower bouquets, bookmark sets, and gift boxes.',
+      image_url: '/images/crochet_bouquet.jpg',
+      item_count: 7
+    },
+    {
+      name: 'Home Decor',
+      slug: 'home-decor',
+      description: 'Cozy chunky yarn blankets, scalloped coasters, plant hangers, and cushion covers.',
+      image_url: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+      item_count: 5
+    },
+    {
+      name: 'Bags & Pouches',
+      slug: 'bags-pouches',
+      description: 'Chic boho granny square tote bags, drawstring cosmetic pouches, and crossbody purses.',
+      image_url: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80',
+      item_count: 6
+    },
+    {
+      name: 'Keychains & Charms',
+      slug: 'keychains-charms',
+      description: 'Adorable mini crochet sunflowers, tulip bag charms, and heart charms.',
+      image_url: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?auto=format&fit=crop&w=800&q=80',
+      item_count: 9
+    },
+    {
+      name: 'Custom Creations',
+      slug: 'custom-creations',
+      description: 'Personalized bespoke handmade creations turned from your vision into reality.',
+      image_url: '/images/hero_showcase.jpg',
+      item_count: 12
+    }
   ];
 
-  for (const dep of departmentsData) {
-    await runExecute(`
-      INSERT INTO departments (id, name, slug, icon, description, services, image_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [dep.id, dep.name, dep.slug, dep.icon, dep.desc, JSON.stringify(dep.services), dep.img]);
+  for (const cat of categories) {
+    await runExecute(
+      `INSERT INTO categories (name, slug, description, image_url, item_count) VALUES (?, ?, ?, ?, ?)`,
+      [cat.name, cat.slug, cat.description, cat.image_url, cat.item_count]
+    );
   }
 
-  // Doctors (12)
-  const doctorsData = [
-    { id: 1, depId: 1, name: 'Dr. Marcus Vance', spec: 'Interventional Cardiology', qual: 'MD, FACC, FSCAI', exp: 18, gender: 'Male', bio: 'Dr. Marcus Vance is a renowned interventional cardiologist with over 18 years of expertise in complex coronary angioplasty, transcatheter aortic valve replacements (TAVR), and preventive cardiac rehabilitation.', lang: 'English, Spanish', fee: 150.00, img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600' },
-    { id: 2, depId: 1, name: 'Dr. Elena Rostova', spec: 'Heart Failure & Electrophysiology', qual: 'MD, PhD (Cardiology)', exp: 14, gender: 'Female', bio: 'Specializing in arrhythmia ablation, pacemaker implantation, and advanced heart failure therapy, Dr. Rostova has published numerous peer-reviewed cardiology research papers.', lang: 'English, Russian, French', fee: 140.00, img: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&q=80&w=600' },
-    { id: 3, depId: 2, name: 'Dr. Aris Thorne', spec: 'Stroke & Neuro-Oncology', qual: 'MD, DM (Neurology), FAAN', exp: 20, gender: 'Male', bio: 'Leading neurologist specializing in acute stroke thrombolysis, neuro-critical care, and brain tumor management. Director of the Comprehensive Stroke Center.', lang: 'English', fee: 180.00, img: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=600' },
-    { id: 4, depId: 2, name: 'Dr. Sophia Chen', spec: 'Movement Disorders & Parkinson’s', qual: 'MD, PhD', exp: 12, gender: 'Female', bio: 'Expert in deep brain stimulation (DBS) evaluation, Parkinson’s care, epilepsy monitoring, and neuro-genetic conditions.', lang: 'English, Mandarin', fee: 135.00, img: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=600' },
-    { id: 5, depId: 3, name: 'Dr. David Miller', spec: 'Joint Replacement & Trauma', qual: 'MS (Orthopedics), FRCS', exp: 16, gender: 'Male', bio: 'Specialist in computer-navigated robotic knee and hip replacements, complex fracture reconstruction, and minimally invasive joint procedures.', lang: 'English', fee: 160.00, img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=600' },
-    { id: 6, depId: 3, name: 'Dr. Sarah Jenkins', spec: 'Sports Medicine & Arthroscopy', qual: 'MD (Ortho), Fellowship (USA)', exp: 11, gender: 'Female', bio: 'Consultant orthopedic surgeon dedicated to shoulder and knee arthroscopy, ACL reconstruction, ligament repair, and athlete rehabilitation.', lang: 'English, German', fee: 130.00, img: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&q=80&w=600' },
-    { id: 7, depId: 4, name: 'Dr. Michael Sterling', spec: 'Pediatric Intensive Care', qual: 'MD (Pediatrics), DCH', exp: 15, gender: 'Male', bio: 'Compassionate pediatrician focusing on developmental milestone monitoring, pediatric emergency medicine, and childhood asthma management.', lang: 'English, Spanish', fee: 110.00, img: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=600' },
-    { id: 8, depId: 5, name: 'Dr. Amara Patel', spec: 'Dermatology & Laser Surgery', qual: 'MD, DNB (Dermatology)', exp: 10, gender: 'Female', bio: 'Expert in clinical dermatology, acne scarring treatments, biological therapies for psoriasis, and anti-aging aesthetic procedures.', lang: 'English, Hindi', fee: 120.00, img: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&q=80&w=600' },
-    { id: 9, depId: 6, name: 'Dr. Robert Harrison', spec: 'Internal Medicine & Diabetology', qual: 'MD (General Medicine)', exp: 22, gender: 'Male', bio: 'Senior physician specializing in multi-system adult diseases, metabolic syndrome, difficult-to-treat hypertension, and holistic disease prevention.', lang: 'English', fee: 100.00, img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600' },
-    { id: 10, depId: 7, name: 'Dr. Victoria Adams', spec: 'High-Risk Obstetrics & Gynecology', qual: 'MD, FACOG', exp: 17, gender: 'Female', bio: 'Pioneer in minimally invasive laparoscopic hysterectomies, painless childbirth, fetal medicine, and high-risk pregnancy monitoring.', lang: 'English, French', fee: 150.00, img: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=600' },
-    { id: 11, depId: 8, name: 'Dr. Jonathan Vance', spec: 'ENT & Head-Neck Surgery', qual: 'MS (ENT), DLO', exp: 13, gender: 'Male', bio: 'Expert in endoscopic sinus surgery, sleep apnea treatment, eardrum repair (tympanoplasty), and voice pathology.', lang: 'English', fee: 125.00, img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=600' },
-    { id: 12, depId: 10, name: 'Dr. Beatrix Lawson', spec: 'Medical Oncology', qual: 'MD, DM (Oncology), FESMO', exp: 19, gender: 'Female', bio: 'Renowned oncologist specializing in personalized precision medicine, breast and lung cancer targeted therapies, and clinical trial design.', lang: 'English', fee: 200.00, img: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&q=80&w=600' }
+  // 3. Seed Products
+  const products = [
+    {
+      name: 'Everlasting Rose & Daisy Crochet Bouquet',
+      slug: 'everlasting-rose-daisy-crochet-bouquet',
+      sku: 'AMS-BQT-001',
+      category_id: 3,
+      category_name: 'Handmade Gifts',
+      description: 'Handcrafted with love using premium soft cotton yarn. Features 3 dusty rose blossoms, 4 cream field daisies, and lush muted sage leaves wrapped in eco-friendly craft paper and bound with organic twine. Never fades, symbol of eternal care.',
+      short_description: 'Everlasting handmade crochet floral bouquet in dusty rose and cream.',
+      price: 48.00,
+      discount_price: 42.00,
+      stock: 15,
+      image_url: '/images/crochet_bouquet.jpg',
+      additional_images: JSON.stringify(['/images/crochet_bouquet.jpg', '/images/hero_showcase.jpg']),
+      materials: '100% Combed Cotton Yarn, Flexible Floral Stem Wire, Kraft Paper Wrap',
+      dimensions: 'Height: 14 inches, Width: 9 inches',
+      available_colors: JSON.stringify(['Dusty Rose & Cream', 'Blush & White', 'Vintage Ochre & Sage']),
+      available_sizes: JSON.stringify(['Standard Bouquet (7 Stems)', 'Deluxe Bouquet (12 Stems)']),
+      is_featured: 1,
+      is_bestseller: 1
+    },
+    {
+      name: 'Heirloom Newborn Knitted Cardigan & Booties Set',
+      slug: 'heirloom-newborn-knitted-cardigan-booties-set',
+      sku: 'AMS-BB-002',
+      category_id: 2,
+      category_name: 'Baby & Kids',
+      description: 'Soft heirloom baby cardigan hand-knitted with hypoallergenic extra-fine merino yarn. Completed with genuine wooden heart buttons and matching delicate booties with satin tie ribbons. Gentle against delicate baby skin.',
+      short_description: 'Cozy cream hand-knitted baby sweater set with wooden heart buttons.',
+      price: 65.00,
+      discount_price: 0,
+      stock: 8,
+      image_url: '/images/baby_cardigan.jpg',
+      additional_images: JSON.stringify(['/images/baby_cardigan.jpg']),
+      materials: '100% Ultra-Soft Hypoallergenic Cotton-Merino Blend Yarn, Wooden Heart Buttons',
+      dimensions: '0-3 Months (Chest 18in, Length 10.5in)',
+      available_colors: JSON.stringify(['Warm Cream', 'Soft Blush Pink', 'Muted Sage', 'Oatmeal Beige']),
+      available_sizes: JSON.stringify(['0-3 Months', '3-6 Months', '6-12 Months']),
+      is_featured: 1,
+      is_bestseller: 1
+    },
+    {
+      name: 'Boho Floral Granny Square Tote Bag',
+      slug: 'boho-floral-granny-square-tote-bag',
+      sku: 'AMS-BAG-003',
+      category_id: 5,
+      category_name: 'Bags & Pouches',
+      description: 'Chic hand-crocheted shoulder tote bag crafted from 16 intricate floral granny squares in warm earthy tones. Reinforced with a sturdy cream linen inner lining and comfortable wide shoulder straps.',
+      short_description: 'Handmade floral granny square shoulder bag with linen lining.',
+      price: 54.00,
+      discount_price: 49.00,
+      stock: 12,
+      image_url: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80',
+      additional_images: JSON.stringify(['https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80']),
+      materials: 'Heavy Weight Cotton Cord, Natural Linen Lining, Magnetic Snap Closure',
+      dimensions: '14" W x 15" H (Strap Drop: 11")',
+      available_colors: JSON.stringify(['Dusty Rose & Sage Blend', 'Warm Earth Tones', 'Pastel Blossom']),
+      available_sizes: JSON.stringify(['One Size']),
+      is_featured: 1,
+      is_bestseller: 1
+    },
+    {
+      name: 'Handcrafted Chunky Cable Knit Throw Blanket',
+      slug: 'handcrafted-chunky-cable-knit-throw-blanket',
+      sku: 'AMS-HOM-004',
+      category_id: 4,
+      category_name: 'Home Decor',
+      description: 'Luxuriously plush hand-knitted chunky yarn throw blanket. Designed with rich textured cables for maximum warmth, elegance, and aesthetic beauty draped over your living room sofa or bedroom duvet.',
+      short_description: 'Plush chunky yarn hand-knitted throw blanket in warm cream.',
+      price: 110.00,
+      discount_price: 95.00,
+      stock: 4,
+      image_url: '/images/hero_showcase.jpg',
+      additional_images: JSON.stringify(['/images/hero_showcase.jpg']),
+      materials: '100% Chenille Soft Chunky Yarn',
+      dimensions: '50" x 60" (Standard Throw)',
+      available_colors: JSON.stringify(['Warm Cream', 'Soft Blush', 'Sage Mist', 'Charcoal Taupe']),
+      available_sizes: JSON.stringify(['Throw (50x60")', 'Full Blanket (60x70")']),
+      is_featured: 1,
+      is_bestseller: 0
+    },
+    {
+      name: 'Handmade Scalloped Botanical Coaster Set (Set of 4)',
+      slug: 'handmade-scalloped-botanical-coaster-set',
+      sku: 'AMS-HOM-005',
+      category_id: 4,
+      category_name: 'Home Decor',
+      description: 'Set of 4 absorbent handcrafted crochet coasters featuring delicate scalloped floral edges. Perfect for hot tea, coffee mugs, or morning matcha while adding a rustic artisanal touch to your coffee table.',
+      short_description: 'Set of 4 absorbent floral crochet mug coasters.',
+      price: 24.00,
+      discount_price: 0,
+      stock: 20,
+      image_url: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+      additional_images: JSON.stringify(['https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80']),
+      materials: '100% Absorbent Natural Cotton',
+      dimensions: 'Diameter: 4.5 inches each',
+      available_colors: JSON.stringify(['Assorted Palette (Rose, Sage, Cream, Taupe)', 'Natural Ivory Mono', 'Sage & Cream']),
+      available_sizes: JSON.stringify(['Set of 4', 'Set of 6']),
+      is_featured: 0,
+      is_bestseller: 1
+    },
+    {
+      name: 'Crochet Mini Sunflower Bag Charm & Keychain',
+      slug: 'crochet-mini-sunflower-bag-charm-keychain',
+      sku: 'AMS-KEY-006',
+      category_id: 6,
+      category_name: 'Keychains & Charms',
+      description: 'Cheerful miniature crochet sunflower featuring vibrant golden petals, rich brown textured center, and cute green leaf stem. Comes with a premium anti-tarnish gold metal clasp for keys or handbag decoration.',
+      short_description: 'Handmade sunny crochet sunflower bag charm with gold clasp.',
+      price: 14.50,
+      discount_price: 12.00,
+      stock: 35,
+      image_url: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?auto=format&fit=crop&w=800&q=80',
+      additional_images: JSON.stringify(['https://images.unsplash.com/photo-1607344645866-009c320c5ab8?auto=format&fit=crop&w=800&q=80']),
+      materials: 'Mercerized Cotton Thread, Gold Alloy Keyring & Lobster Clasp',
+      dimensions: 'Flower Width: 2.5 inches, Total Length: 5 inches',
+      available_colors: JSON.stringify(['Classic Sunflower', 'Blush Daisy', 'Sage Clover']),
+      available_sizes: JSON.stringify(['Standard Keyring']),
+      is_featured: 0,
+      is_bestseller: 1
+    },
+    {
+      name: 'Fingerless Botanical Cable Hand Warmer Gloves',
+      slug: 'fingerless-botanical-cable-hand-warmer-gloves',
+      sku: 'AMS-ACC-007',
+      category_id: 1,
+      category_name: 'Crochet Accessories',
+      description: 'Keep your hands warm while texting, typing, or crocheting! Hand-knitted fingerless gloves featuring an intricate twisting cable stitch and cozy ribbed wrist cuffs.',
+      short_description: 'Cozy cable knit fingerless texting gloves in dusty rose.',
+      price: 28.00,
+      discount_price: 0,
+      stock: 18,
+      image_url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
+      additional_images: JSON.stringify(['https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80']),
+      materials: '80% Soft Acrylic, 20% Wool Blend',
+      dimensions: 'Length: 8 inches (Stretchable Fit)',
+      available_colors: JSON.stringify(['Dusty Rose', 'Oatmeal Taupe', 'Muted Sage', 'Midnight Mocha']),
+      available_sizes: JSON.stringify(['Small/Medium', 'Medium/Large']),
+      is_featured: 1,
+      is_bestseller: 0
+    },
+    {
+      name: 'Vintage Floral Crochet Bucket Hat',
+      slug: 'vintage-floral-crochet-bucket-hat',
+      sku: 'AMS-ACC-008',
+      category_id: 1,
+      category_name: 'Crochet Accessories',
+      description: 'Chic hand-crocheted bucket hat with scalloped brim and subtle botanical daisy motifs around the crown. Soft, breathable, and easily foldable into your tote bag for sunny day outings.',
+      short_description: 'Handcrafted floral bucket hat with scalloped brim.',
+      price: 38.00,
+      discount_price: 34.00,
+      stock: 9,
+      image_url: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?auto=format&fit=crop&w=800&q=80',
+      additional_images: JSON.stringify(['https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?auto=format&fit=crop&w=800&q=80']),
+      materials: '100% Breathable Cotton Yarn',
+      dimensions: 'Head Circumference: 21.5" - 23.5"',
+      available_colors: JSON.stringify(['Sage & Cream', 'Dusty Rose & Beige', 'Buttercup Yellow']),
+      available_sizes: JSON.stringify(['One Size Fits Most']),
+      is_featured: 0,
+      is_bestseller: 1
+    }
   ];
 
-  for (const doc of doctorsData) {
-    await runExecute(`
-      INSERT INTO doctors (id, department_id, name, specialization, qualification, experience_years, gender, bio, languages, consultation_fee, image_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [doc.id, doc.depId, doc.name, doc.spec, doc.qual, doc.exp, doc.gender, doc.bio, doc.lang, doc.fee, doc.img]);
+  for (const prod of products) {
+    await runExecute(
+      `INSERT INTO products (
+        name, slug, sku, category_id, category_name, description, short_description,
+        price, discount_price, stock, image_url, additional_images, materials,
+        dimensions, available_colors, available_sizes, is_featured, is_bestseller
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        prod.name, prod.slug, prod.sku, prod.category_id, prod.category_name,
+        prod.description, prod.short_description, prod.price, prod.discount_price,
+        prod.stock, prod.image_url, prod.additional_images, prod.materials,
+        prod.dimensions, prod.available_colors, prod.available_sizes,
+        prod.is_featured, prod.is_bestseller
+      ]
+    );
+  }
 
-    // Add schedules Mon-Fri (1 to 5)
-    for (let day = 1; day <= 5; day++) {
-      await runExecute(`
-        INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration_minutes)
-        VALUES (?, ?, ?, ?, ?)
-      `, [doc.id, day, '09:00', '17:00', 30]);
+  // 4. Seed Orders
+  const sampleOrders = [
+    {
+      order_number: 'AMS-2026-0001',
+      customer_id: 2,
+      customer_name: 'Sarah Jenkins',
+      customer_email: 'customer@example.com',
+      customer_phone: '(555) 987-6543',
+      shipping_address: '742 Evergreen Terrace',
+      city: 'Springfield',
+      state: 'OR',
+      postal_code: '97477',
+      country: 'United States',
+      subtotal: 107.00,
+      shipping_cost: 0,
+      discount_amount: 10.70,
+      total_amount: 96.30,
+      payment_method: 'Credit Card',
+      payment_status: 'Paid',
+      order_status: 'Processing',
+      notes: 'Customer requested gift note: "Happy Birthday Grace!"',
+      items: [
+        { product_id: 1, product_name: 'Everlasting Rose & Daisy Crochet Bouquet', price: 42.00, quantity: 1, color: 'Dusty Rose & Cream', size: 'Standard Bouquet (7 Stems)', total_price: 42.00, image: '/images/crochet_bouquet.jpg' },
+        { product_id: 2, product_name: 'Heirloom Newborn Knitted Cardigan & Booties Set', price: 65.00, quantity: 1, color: 'Warm Cream', size: '0-3 Months', total_price: 65.00, image: '/images/baby_cardigan.jpg' }
+      ]
+    },
+    {
+      order_number: 'AMS-2026-0002',
+      customer_id: 0,
+      customer_name: 'Emily Watson',
+      customer_email: 'emily.watson@gmail.com',
+      customer_phone: '(555) 432-1098',
+      shipping_address: '321 Maple Avenue',
+      city: 'Austin',
+      state: 'TX',
+      postal_code: '78701',
+      country: 'United States',
+      subtotal: 54.00,
+      shipping_cost: 5.00,
+      discount_amount: 0,
+      total_amount: 59.00,
+      payment_method: 'PayPal',
+      payment_status: 'Paid',
+      order_status: 'Shipped',
+      notes: 'Tracking ID: USPS 9400111899560000000000',
+      items: [
+        { product_id: 3, product_name: 'Boho Floral Granny Square Tote Bag', price: 49.00, quantity: 1, color: 'Dusty Rose & Sage Blend', size: 'One Size', total_price: 49.00, image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80' }
+      ]
+    },
+    {
+      order_number: 'AMS-2026-0003',
+      customer_id: 0,
+      customer_name: 'Jessica Miller',
+      customer_email: 'jessica.m@yahoo.com',
+      customer_phone: '(555) 345-6789',
+      shipping_address: '55 Ocean Drive, Apt 4B',
+      city: 'Miami',
+      state: 'FL',
+      postal_code: '33139',
+      country: 'United States',
+      subtotal: 38.50,
+      shipping_cost: 4.50,
+      discount_amount: 0,
+      total_amount: 43.00,
+      payment_method: 'Credit Card',
+      payment_status: 'Paid',
+      order_status: 'Delivered',
+      notes: 'Package delivered at front porch.',
+      items: [
+        { product_id: 5, product_name: 'Handmade Scalloped Botanical Coaster Set', price: 24.00, quantity: 1, color: 'Assorted Palette', size: 'Set of 4', total_price: 24.00, image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80' },
+        { product_id: 6, product_name: 'Crochet Mini Sunflower Bag Charm', price: 14.50, quantity: 1, color: 'Classic Sunflower', size: 'Standard Keyring', total_price: 14.50, image: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?auto=format&fit=crop&w=800&q=80' }
+      ]
+    }
+  ];
+
+  for (const ord of sampleOrders) {
+    const res = await runExecute(
+      `INSERT INTO orders (
+        order_number, customer_id, customer_name, customer_email, customer_phone,
+        shipping_address, city, state, postal_code, country, subtotal, shipping_cost,
+        discount_amount, total_amount, payment_method, payment_status, order_status, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        ord.order_number, ord.customer_id, ord.customer_name, ord.customer_email,
+        ord.customer_phone, ord.shipping_address, ord.city, ord.state, ord.postal_code,
+        ord.country, ord.subtotal, ord.shipping_cost, ord.discount_amount,
+        ord.total_amount, ord.payment_method, ord.payment_status, ord.order_status, ord.notes
+      ]
+    );
+
+    if (res.lastID) {
+      for (const item of ord.items) {
+        await runExecute(
+          `INSERT INTO order_items (order_id, product_id, product_name, product_image, price, quantity, color, size, total_price)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [res.lastID, item.product_id, item.product_name, item.image, item.price, item.quantity, item.color, item.size, item.total_price]
+        );
+      }
     }
   }
 
-  // Facilities (12)
-  const facilitiesData = [
-    { name: 'Emergency Care Department', cat: 'Emergency Services', desc: '24/7 Trauma response center equipped with triage bays, cardiac resuscitation equipment, and dedicated emergency physicians.', img: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800', icon: 'Siren' },
-    { name: 'Intensive Care Unit (ICU)', cat: 'Critical Care', desc: 'Ultra-modern multi-bed ICU with continuous invasive hemodynamic monitoring, mechanical ventilators, and 1:1 nurse ratios.', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800', icon: 'Activity' },
-    { name: 'Operation Theatres (OT)', cat: 'Surgical Facilities', desc: '8 Modular, infection-controlled HEPA-filtered operating suites equipped for robotic surgery, neurosurgery, and cardiac bypass.', img: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=800', icon: 'Scissors' },
-    { name: '24/7 Pharmacy', cat: 'Pharmacy Services', desc: 'Fully stocked in-hospital pharmacy providing genuine prescription medicines, critical care drugs, and home delivery options.', img: 'https://images.unsplash.com/photo-1586015555751-63c3d52627cb?auto=format&fit=crop&q=80&w=800', icon: 'Pill' },
-    { name: 'Central Diagnostic Laboratory', cat: 'Diagnostics', desc: 'NABL accredited laboratory delivering fast, accurate pathology, histology, immunology, and molecular microbiology tests.', img: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800', icon: 'TestTube' },
-    { name: 'High-Resolution MRI & CT Suite', cat: 'Radiology & Imaging', desc: 'Featuring 3.0 Tesla Silent MRI and 128-Slice Ultra-Fast Low-Radiation CT Scanners for crystal clear diagnostic imaging.', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800', icon: 'Scan' },
-    { name: 'Digital X-Ray & Ultrasound', cat: 'Radiology & Imaging', desc: 'Low-dose digital radiography, 4D obstetric ultrasound, and color Doppler vascular imaging available around the clock.', img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800', icon: 'FileText' },
-    { name: 'Advanced Cardiac Ambulance', cat: 'Emergency Services', desc: 'Fleet of Mobile ICUs equipped with defibrillators, portable ventilators, telemetry, and trained paramedics.', img: 'https://images.unsplash.com/photo-1587745416684-47953f16f02f?auto=format&fit=crop&q=80&w=800', icon: 'Truck' },
-    { name: 'Luxury Inpatient Suites', cat: 'Patient Rooms', desc: 'Private rooms and executive suites with ergonomic beds, dedicated nursing stations, high-speed Wi-Fi, and patient dining options.', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800', icon: 'Bed' },
-    { name: '24/7 Blood Bank', cat: 'Emergency Services', desc: 'NABH certified component blood bank maintaining 100% screened packed red cells, platelets, and fresh frozen plasma.', img: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&q=80&w=800', icon: 'Droplet' },
-    { name: 'Outpatient Clinics (OPD)', cat: 'Outpatient Services', desc: 'Spacious OPD center with 30+ consultation rooms, digital queue management, and comfortable waiting lounges.', img: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800', icon: 'Users' },
-    { name: 'Green Leaf Wellness Cafeteria', cat: 'Hospital Amenities', desc: 'Hygienic, nutritionist-approved food court offering healthy meals, fresh juices, and specialty coffee for visitors and staff.', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=800', icon: 'Coffee' }
+  // 5. Seed Custom Order Requests
+  const sampleCustomOrders = [
+    {
+      request_code: 'CST-2026-8801',
+      customer_name: 'Chloe Bennett',
+      email: 'chloe.bennett@lifestyle.com',
+      phone: '(555) 777-8899',
+      product_type: 'Custom Crochet Baby Blanket & Amigurumi Bear',
+      preferred_color: 'Pastel Sage & Soft Cream',
+      size: '36" x 48" Blanket + 8" Teddy Bear',
+      quantity: 1,
+      budget: '$120 - $150',
+      deadline: '2026-11-15',
+      custom_description: 'I am hosting a botanical themed baby shower for my sister. I would love a matching cable knit baby blanket in sage and cream with her baby\'s initials "E.M." embroidered on a leather tag, plus a matching plush crochet teddy bear.',
+      reference_image_url: '/images/baby_cardigan.jpg',
+      status: 'In Production',
+      admin_notes: 'Yarn sourced (Organic Merino). Estimated completion: Oct 20.'
+    },
+    {
+      request_code: 'CST-2026-8802',
+      customer_name: 'Marcus Vance',
+      email: 'marcus.vance@gmail.com',
+      phone: '(555) 222-3344',
+      product_type: 'Custom Bridal Party Crochet Bouquets (6 Sets)',
+      preferred_color: 'Dusty Rose, Blush, Eucalyptus Green & Ivory',
+      size: '1 Maid of Honor + 5 Bridesmaid bouquets',
+      quantity: 6,
+      budget: '$300 - $400',
+      deadline: '2026-12-01',
+      custom_description: 'Looking for lasting handmade crochet flower bouquets for our winter wedding so the bridal party can keep them forever. Would love roses, peonies, and olive leaf sprigs.',
+      reference_image_url: '/images/crochet_bouquet.jpg',
+      status: 'Quoted',
+      admin_notes: 'Sent quote for $340 including gift boxes. Awaiting final deposit confirmation.'
+    }
   ];
 
-  for (const fac of facilitiesData) {
-    await runExecute(`
-      INSERT INTO facilities (name, category, description, image_url, icon)
-      VALUES (?, ?, ?, ?, ?)
-    `, [fac.name, fac.cat, fac.desc, fac.img, fac.icon]);
+  for (const cst of sampleCustomOrders) {
+    await runExecute(
+      `INSERT INTO custom_orders (
+        request_code, customer_name, email, phone, product_type, preferred_color,
+        size, quantity, budget, deadline, custom_description, reference_image_url,
+        status, admin_notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        cst.request_code, cst.customer_name, cst.email, cst.phone, cst.product_type,
+        cst.preferred_color, cst.size, cst.quantity, cst.budget, cst.deadline,
+        cst.custom_description, cst.reference_image_url, cst.status, cst.admin_notes
+      ]
+    );
   }
 
-  // Reviews
-  const reviewsData = [
-    { name: 'Eleanor Vance', rating: 5, comment: 'The cardiology team saved my husband’s life during an emergency cardiac arrest. Dr. Marcus Vance and the ICU nursing staff are absolute angels!', dept: 'Cardiology' },
-    { name: 'Michael Ross', rating: 5, comment: 'Had my knee replacement surgery done by Dr. David Miller. I was walking without support within 3 weeks. World-class facilities and care.', dept: 'Orthopedics' },
-    { name: 'Sophia Martinez', rating: 5, comment: 'Delivered my twin baby girls at St. Jude. Dr. Victoria Adams made the entire process so smooth, safe, and comforting.', dept: 'Gynecology & Obstetrics' },
-    { name: 'David K. Thompson', rating: 5, comment: 'Exceptional experience at the MRI diagnostics center. Extremely clean hospital, courteous staff, and negligible wait times!', dept: 'Radiology' }
+  // 6. Seed Coupons
+  const sampleCoupons = [
+    { code: 'WELCOME10', discount_type: 'percentage', discount_amount: 10, min_order: 20, expiration_date: '2026-12-31', usage_limit: 500, times_used: 42, is_active: 1 },
+    { code: 'FAITH15', discount_type: 'percentage', discount_amount: 15, min_order: 50, expiration_date: '2026-11-30', usage_limit: 200, times_used: 18, is_active: 1 },
+    { code: 'HANDMADE5', discount_type: 'fixed', discount_amount: 5, min_order: 30, expiration_date: '2026-12-31', usage_limit: 100, times_used: 9, is_active: 1 }
   ];
 
-  for (const rev of reviewsData) {
-    await runExecute(`
-      INSERT INTO reviews (patient_name, rating, comment, department)
-      VALUES (?, ?, ?, ?)
-    `, [rev.name, rev.rating, rev.comment, rev.dept]);
+  for (const cpn of sampleCoupons) {
+    await runExecute(
+      `INSERT INTO coupons (code, discount_type, discount_amount, min_order, expiration_date, usage_limit, times_used, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [cpn.code, cpn.discount_type, cpn.discount_amount, cpn.min_order, cpn.expiration_date, cpn.usage_limit, cpn.times_used, cpn.is_active]
+    );
   }
 
-  // Patients
-  const patientsData = [
-    { id: 1, name: 'James Wilson', age: 45, gender: 'Male', phone: '+1 555-0192', email: 'james.wilson@example.com' },
-    { id: 2, name: 'Sarah Jenkins', age: 32, gender: 'Female', phone: '+1 555-0184', email: 'sarah.j@example.com' },
-    { id: 3, name: 'Robert Garcia', age: 58, gender: 'Male', phone: '+1 555-0177', email: 'r.garcia@example.com' }
+  // 7. Seed Testimonials
+  const sampleTestimonials = [
+    { customer_name: 'Hannah & Caleb R.', location_or_role: 'Verified Customer', comment: 'Absolutely beautiful! The attention to detail was amazing. The baby cardigan was the highlight of our baby shower.', rating: 5, is_featured: 1 },
+    { customer_name: 'Rachel Stevens', location_or_role: 'Custom Order Client', comment: 'The perfect handmade gift. You can really feel the love behind the work. The flower bouquet will never wither!', rating: 5, is_featured: 1 },
+    { customer_name: 'Megan K.', location_or_role: 'Repeat Shopper', comment: 'Beautiful quality and such a thoughtful custom creation. Shipped with lovely handwritten notes and botanical packaging.', rating: 5, is_featured: 1 }
   ];
 
-  for (const pat of patientsData) {
-    await runExecute(`
-      INSERT INTO patients (id, full_name, age, gender, phone, email)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [pat.id, pat.name, pat.age, pat.gender, pat.phone, pat.email]);
+  for (const tst of sampleTestimonials) {
+    await runExecute(
+      `INSERT INTO testimonials (customer_name, location_or_role, comment, rating, is_featured)
+       VALUES (?, ?, ?, ?, ?)`,
+      [tst.customer_name, tst.location_or_role, tst.comment, tst.rating, tst.is_featured]
+    );
   }
 
-  // Today's date string YYYY-MM-DD
-  const todayStr = new Date().toISOString().split('T')[0];
+  // 8. Seed Reviews
+  const sampleReviews = [
+    { product_id: 1, customer_name: 'Sophia M.', customer_email: 'sophia@example.com', rating: 5, comment: 'I ordered the rose & daisy bouquet for my mom\'s birthday. She cried happy tears! The stitching is so neat and delicate.' },
+    { product_id: 2, customer_name: 'Brianna White', customer_email: 'brianna@example.com', rating: 5, comment: 'So soft and gentle for my newborn! The wooden heart buttons give it such a cozy heirloom feel.' },
+    { product_id: 3, customer_name: 'Clara D.', customer_email: 'clara@example.com', rating: 5, comment: 'Love this tote bag so much! High quality lining so my keys don\'t poke through the crochet.' }
+  ];
 
-  // Appointments
-  await runExecute(`
-    INSERT INTO appointments (appointment_code, patient_id, doctor_id, department_id, appointment_date, appointment_time, reason, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `, ['APT-2026-8801', 1, 1, 1, todayStr, '10:00 AM', 'Routine cardiovascular follow-up after stent placement.', 'Confirmed']);
+  for (const rev of sampleReviews) {
+    await runExecute(
+      `INSERT INTO reviews (product_id, customer_name, customer_email, rating, comment, is_approved)
+       VALUES (?, ?, ?, ?, ?, 1)`,
+      [rev.product_id, rev.customer_name, rev.customer_email, rev.rating, rev.comment]
+    );
+  }
 
-  await runExecute(`
-    INSERT INTO appointments (appointment_code, patient_id, doctor_id, department_id, appointment_date, appointment_time, reason, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `, ['APT-2026-8802', 2, 8, 5, todayStr, '02:30 PM', 'Consultation for persistent skin rash and allergy screening.', 'Pending']);
+  // 9. Seed FAQs
+  const sampleFaqs = [
+    { category: 'Custom Orders', question: 'How do custom order requests work?', answer: 'Simply fill out our Custom Order Request form with your vision, preferred colors, and budget. We will review your request within 24-48 hours and provide a detailed quote and estimated completion timeline.' },
+    { category: 'Shipping & Delivery', question: 'What is the processing time for handmade items?', answer: 'Ready-to-ship items are dispatched within 2-3 business days. Custom handmade creations usually take 1-2 weeks depending on complexity and yarn availability.' },
+    { category: 'Care Instructions', question: 'How should I clean and wash my crochet items?', answer: 'We recommend gentle handwashing in cold water with mild detergent. Reshape laying flat on a dry towel. Avoid harsh wringing or machine drying.' },
+    { category: 'Materials', question: 'What kind of yarn and materials do you use?', answer: 'We exclusively select premium 100% combed cotton, ultra-soft merino wool blends, and eco-certified hypoallergenic yarns free of harsh dyes.' }
+  ];
 
-  await runExecute(`
-    INSERT INTO appointments (appointment_code, patient_id, doctor_id, department_id, appointment_date, appointment_time, reason, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `, ['APT-2026-8803', 3, 3, 2, todayStr, '11:00 AM', 'Evaluation for chronic migraine headaches and dizziness.', 'Confirmed']);
+  for (let i = 0; i < sampleFaqs.length; i++) {
+    const faq = sampleFaqs[i];
+    await runExecute(
+      `INSERT INTO faqs (category, question, answer, is_active, order_num) VALUES (?, ?, ?, 1, ?)`,
+      [faq.category, faq.question, faq.answer, i + 1]
+    );
+  }
 
-  console.log('✅ Demo database seeded successfully!');
-}
+  // 10. Seed Website Settings (CMS)
+  const defaultSettings: Record<string, string> = {
+    business_name: "A Millennial's Stitch",
+    tagline: "Handmade with Love, Rooted in Faith.",
+    hero_headline: "Thoughtfully Handcrafted Crochet & Knitting",
+    hero_subtext: "Thoughtfully handcrafted crochet pieces, gifts and accessories made with creativity, care and love.",
+    about_headline: "Slow Handmade Creation, Woven with Purpose",
+    about_text: "A Millennial’s Stitch began with a quiet prayer, a ball of soft yarn, and a passion for crafting meaningful, lasting pieces. Every knot, loop, and stitch is guided by love, creativity, and faith.",
+    contact_email: "hello@amillennialstitch.com",
+    contact_phone: "(555) 234-5678",
+    business_address: "Nashville, Tennessee, USA",
+    currency_symbol: "$",
+    shipping_charge: "5.00",
+    free_shipping_threshold: "75.00",
+    tax_percentage: "7.0",
+    announcement_banner: "✨ Free Shipping on orders over $75 | Handcrafted with Love & Rooted in Faith ✨",
+    instagram_url: "https://instagram.com/amillennialstitch",
+    pinterest_url: "https://pinterest.com/amillennialstitch",
+    etsy_url: "https://etsy.com/shop/amillennialstitch"
+  };
 
-if (process.argv[1] && process.argv[1].endsWith('seed.ts')) {
-  seedDatabaseIfNeeded().then(() => process.exit(0)).catch(err => {
-    console.error(err);
-    process.exit(1);
-  });
+  for (const [key, value] of Object.entries(defaultSettings)) {
+    await runExecute(
+      `INSERT INTO website_settings (setting_key, setting_value) VALUES (?, ?)`,
+      [key, value]
+    );
+  }
+
+  console.log('✅ Seeding complete!');
 }
