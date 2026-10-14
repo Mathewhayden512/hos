@@ -13,7 +13,7 @@ import {
   Compass,
   Sparkles
 } from 'lucide-react';
-import { KODAIKANAL_DATA } from '../../data/kodaikanalData';
+import { KODAIKANAL_DATA, PAX_PRICING_TIERS } from '../../data/kodaikanalData';
 
 export const ContactSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -292,17 +292,22 @@ export const ContactSection: React.FC = () => {
                     {/* Guests */}
                     <div>
                       <label className="block text-xs font-semibold text-mist-200 uppercase tracking-wider mb-1.5">
-                        Number of Travelers
+                        Group Size & Room Plan
                       </label>
                       <select
                         value={formData.guests}
                         onChange={(e) => setFormData({ ...formData, guests: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/20 text-white focus:outline-none focus:border-emerald-400 text-sm transition-colors"
                       >
-                        <option value="2 Adults (Couple)" className="bg-forest-950">2 Adults (Couple)</option>
-                        <option value="3-4 (Small Family)" className="bg-forest-950">3-4 (Small Family)</option>
-                        <option value="5-7 (Innova Group)" className="bg-forest-950">5-7 (Innova Group)</option>
-                        <option value="8+ (Tempo Traveller Group)" className="bg-forest-950">8+ (Tempo Traveller Group)</option>
+                        {PAX_PRICING_TIERS.map((tier) => (
+                          <option 
+                            key={tier.pax} 
+                            value={`${tier.pax} Pax - ₹${tier.pricePerPax.toLocaleString()}/head (${tier.rooms})`} 
+                            className="bg-forest-950"
+                          >
+                            {tier.pax} Pax — ₹{tier.pricePerPax.toLocaleString()} / head ({tier.rooms})
+                          </option>
+                        ))}
                       </select>
                     </div>
 
