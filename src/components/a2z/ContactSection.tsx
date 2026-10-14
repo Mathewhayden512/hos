@@ -250,7 +250,7 @@ export const ContactSection: React.FC = () => {
                       <input
                         type="tel"
                         required
-                        placeholder="e.g. +91 98400 XXXXX"
+                        placeholder="e.g. 73975 XXXXX / 95859 XXXXX"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/20 text-white placeholder-mist-500 focus:outline-none focus:border-emerald-400 text-sm transition-colors"

@@ -64,11 +64,16 @@ export const Footer: React.FC = () => {
               Hotline & Address
             </h4>
             <ul className="space-y-2.5 text-xs">
-              <li className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <a href={`tel:${KODAIKANAL_DATA.company.phone}`} className="hover:text-white">
-                  {KODAIKANAL_DATA.company.phone}
-                </a>
+              <li className="flex items-start gap-2">
+                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <a href={`tel:${KODAIKANAL_DATA.company.phone}`} className="hover:text-white">
+                    {KODAIKANAL_DATA.company.phone}
+                  </a>
+                  <a href={`tel:${KODAIKANAL_DATA.company.secondaryPhone}`} className="hover:text-white text-mist-400">
+                    {KODAIKANAL_DATA.company.secondaryPhone}
+                  </a>
+                </div>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
